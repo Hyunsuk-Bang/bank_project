@@ -18,7 +18,7 @@ func NewStore(db *sql.DB) *Store {
 	}
 }
 
-func (store *Store) execTx(ctx context.Context fn func(*Queries) error) error {
+func (store *Store) execTx(ctx context.Context, fn func(*Queries) error) error {
 	tx, err := store.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
@@ -33,22 +33,22 @@ func (store *Store) execTx(ctx context.Context fn func(*Queries) error) error {
 		return err
 	}
 
-	return rx.Commit()
+	return tx.Commit()
 }
 
 type TransferTxParams struct {
 	FromAccountId int64 `json:"from_account_id"`
-	ToAccountId int64 `json:"to_account_id"`
-	Amount int64 `json:"amount"`
+	ToAccountId   int64 `json:"to_account_id"`
+	Amount        int64 `json:"amount"`
 }
 
 type TransferTxResult struct {
 	Transfer    Transfer `json:"transfer"`
 	FromAccount Account  `json:"from_account"`
-	to_account  Account  `json:"to_account"`
-	FronEntry   Entry    `json:"from_entry"`
-	ToEntry	    Entry    `json:"to_entry"`
-} 
+	ToAccount   Account  `json:"to_account"`
+	FromEntry   Entry    `json:"from_entry"`
+	ToEntry     Entry    `json:"to_entry"`
+}
 
 func (store *Store) TransferTx(ctx context.Context, arg TransferTxParams) (TransferTxResult, error) {
 	var result TransferTxResult
@@ -57,22 +57,22 @@ func (store *Store) TransferTx(ctx context.Context, arg TransferTxParams) (Trans
 		var err error
 		result.Transfer, err = q.CreateTransfer(ctx, CreateTransferParams{
 			FromAccountID: arg.FromAccountId,
-			ToAccountID: arg.ToAccountId,
-			Amount: arg.Amount,
-		})
-		if err != nil {
-			return err 
-		}
-
-		result.FromEntry, err = q.CreateEntry(ctx, CreateEntryParams{
-			AccountID: args.FromAccountID,
-			Amount: -arg.Amout,
+			ToAccountID:   arg.ToAccountId,
+			Amount:        arg.Amount,
 		})
 		if err != nil {
 			return err
 		}
 
-		if arg.FromAccountID < arg.ToAccountID {
+		result.FromEntry, err = q.CreateEntry(ctx, CreateEntryParams{
+			AccountID: arg.FromAccountId,
+			Amount:    -arg.Amount,
+		})
+		if err != nil {
+			return err
+		}
+
+		if arg.FromAccountId < arg.ToAccountId {
 			result.FromAccount, result.ToAccount, err = addMoney(ctx, q, arg.FromAccountID, -arg.Amount, arg.ToAccountID, arg.Amount)
 		} else {
 			result.ToAccount, result.FromAccount, err = addMoney(ctx, q, arg.ToAccountID, arg.Amount, arg.FromAccountID, -arg.Amount)
@@ -81,5 +81,5 @@ func (store *Store) TransferTx(ctx context.Context, arg TransferTxParams) (Trans
 		return err
 	})
 
-	return result,err
+	return result, err
 }
