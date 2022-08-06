@@ -28,3 +28,9 @@ RETURNING *;
 
 -- name: DeleteAccount :exec
 DELETE FROM account WHERE id = $1;
+
+-- name: AddAccountBalance :one
+UPDATE account
+SET balance = balance + sqlc.arg(amount)
+WHERE id = sqlc.arg(id)
+RETURNING *;
