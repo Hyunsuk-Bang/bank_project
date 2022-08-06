@@ -83,3 +83,6 @@ func (store *Store) TransferTx(ctx context.Context, arg TransferTxParams) (Trans
 
 	return result, err
 }
+
+
+func addMoney(context.Context, q *Queries, )
