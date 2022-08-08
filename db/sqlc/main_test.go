@@ -1,6 +1,7 @@
 package db
 
 import (
+	util "bank/utils"
 	"database/sql"
 	"log"
 	"os"
@@ -12,14 +13,13 @@ import (
 var testQueries *Queries
 var testDB *sql.DB
 
-const (
-	dbDriver = "postgres"
-	dbSource = "postgresql://root:admin@localhost:5432/bank?sslmode=disable"
-)
-
 func TestMain(m *testing.M) {
-	var err error
-	testDB, err = sql.Open(dbDriver, dbSource)
+	config, err := util.LoadConfig("../..")
+	if err != nil {
+		log.Fatal("Cannot load config file")
+	}
+
+	testDB, err = sql.Open(config.DBDriver, config.DBSource)
 	if err != nil {
 		log.Fatal(err)
 	}
