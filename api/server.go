@@ -7,12 +7,12 @@ import (
 )
 
 type Server struct {
-	store  *db.Store   // allow interacting with DataBase
+	store  db.Store    // allow interacting with DataBase
 	router *gin.Engine // Router, send each api to correct handler
 }
 
 //create new server instance
-func NewServer(store *db.Store) *Server {
+func NewServer(store db.Store) *Server {
 	router := gin.Default()
 	server := &Server{
 		store:  store,
